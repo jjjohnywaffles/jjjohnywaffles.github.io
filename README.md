@@ -1,2 +1,0 @@
-# jjjohnywaffles.github.io
-Portfolio
