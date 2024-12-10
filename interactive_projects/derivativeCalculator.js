@@ -89,8 +89,14 @@ function drawGraph(xVals, yVals, yPrimeVals, yDoublePrimeVals) {
                 legend: { display: true },
             },
             scales: {
-                x: { title: { display: true, text: "x" } },
-                y: { title: { display: true, text: "y" } },
+                x: {
+                    title: { display: true, text: "x" },
+                },
+                y: {
+                    title: { display: true, text: "y" },
+                    suggestedMin: -1000, // Adjust to better fit your data
+                    suggestedMax: 1000, // Adjust to better fit your data
+                },
             },
         },
     };
