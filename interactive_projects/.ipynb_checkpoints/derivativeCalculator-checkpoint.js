@@ -1,5 +1,31 @@
-function parseAndSplitExpression(funcExpr) {
-    return funcExpr.replace(/-/g, " - ").replace(/\+/g, " + ").split(" ");
+function randomInput() {
+    const randomValue = [
+        "x**3 - 5*x**2 + 3*x",
+        "2*x**4 + 5*x**3 - x",
+        "x**2 + sin(x)",
+        "e**x - x",
+    ];
+
+    const randomExpression = Math.floor(Math.random() * randomValue.length);
+    document.getElementById("function").value = randomValue[randomExpression];
+    calculateAndPlot();
+}
+
+function calculateAndPlot() {
+    try {
+        const funcExpr = document.getElementById("function").value;
+        const firstDerivative = calculateManualDerivative(funcExpr);
+        const secondDerivative = calculateManualDerivative(firstDerivative);
+
+        // Update Results
+        document.getElementById("original").textContent = "Original Function: " + funcExpr;
+        document.getElementById("first").textContent = "First Derivative: " + firstDerivative;
+        document.getElementById("second").textContent = "Second Derivative: " + secondDerivative;
+
+        generateGraph(funcExpr, firstDerivative, secondDerivative);
+    } catch (error) {
+        alert("Error in calculation: " + error.message);
+    }
 }
 
 function calculateManualDerivative(funcExpr) {
@@ -30,6 +56,10 @@ function calculateManualDerivative(funcExpr) {
     return derivativeTerms.join(" + ").replace(/\+ -/g, "- ");
 }
 
+function parseAndSplitExpression(funcExpr) {
+    return funcExpr.replace(/-/g, " - ").replace(/\+/g, " + ").split(" ");
+}
+
 function evaluateFunction(funcExpr, xVals) {
     return xVals.map((x) => {
         try {
@@ -43,21 +73,16 @@ function evaluateFunction(funcExpr, xVals) {
 }
 
 function generateGraph(funcExpr, firstDerivative, secondDerivative) {
-    // Generate x values from -10 to 10 with finer intervals
     const xVals = Array.from({ length: 401 }, (_, i) => -10 + i * 0.05);
 
-    // Evaluate function and derivatives
     const yVals = evaluateFunction(funcExpr, xVals);
     const yPrimeVals = evaluateFunction(firstDerivative, xVals);
     const yDoublePrimeVals = evaluateFunction(secondDerivative, xVals);
 
-    // Ensure valid y-values and filter NaN or Infinity
-    const allYVals = [...yVals, ...yPrimeVals, ...yDoublePrimeVals].filter(
-        (val) => isFinite(val)
-    );
+    const allYVals = [...yVals, ...yPrimeVals, ...yDoublePrimeVals].filter((val) => isFinite(val));
 
-    const yMin = Math.min(...allYVals);
-    const yMax = Math.max(...allYVals);
+    const yMin = Math.min(...allYVals) - Math.abs(Math.min(...allYVals) * 0.1);
+    const yMax = Math.max(...allYVals) + Math.abs(Math.max(...allYVals) * 0.1);
 
     const ctx = document.getElementById("chart").getContext("2d");
     const config = {
@@ -65,37 +90,16 @@ function generateGraph(funcExpr, firstDerivative, secondDerivative) {
         data: {
             labels: xVals,
             datasets: [
-                {
-                    label: "f(x)",
-                    data: yVals,
-                    borderColor: "blue",
-                    fill: false,
-                },
-                {
-                    label: "f'(x)",
-                    data: yPrimeVals,
-                    borderColor: "orange",
-                    fill: false,
-                },
-                {
-                    label: "f''(x)",
-                    data: yDoublePrimeVals,
-                    borderColor: "green",
-                    fill: false,
-                },
+                { label: "f(x)", data: yVals, borderColor: "blue", fill: false },
+                { label: "f'(x)", data: yPrimeVals, borderColor: "orange", fill: false },
+                { label: "f''(x)", data: yDoublePrimeVals, borderColor: "green", fill: false },
             ],
         },
         options: {
             responsive: true,
             scales: {
-                x: {
-                    title: { display: true, text: "x" },
-                },
-                y: {
-                    title: { display: true, text: "y" },
-                    min: yMin - Math.abs(yMin * 0.1), // Add buffer below min
-                    max: yMax + Math.abs(yMax * 0.1), // Add buffer above max
-                },
+                x: { title: { display: true, text: "x" } },
+                y: { title: { display: true, text: "y" }, min: yMin, max: yMax },
             },
         },
     };
@@ -104,16 +108,4 @@ function generateGraph(funcExpr, firstDerivative, secondDerivative) {
         window.myChart.destroy();
     }
     window.myChart = new Chart(ctx, config);
-}
-
-function calculateAndPlot() {
-    const funcExpr = document.getElementById("function").value;
-    const firstDerivative = calculateManualDerivative(funcExpr);
-    const secondDerivative = calculateManualDerivative(firstDerivative);
-
-    document.getElementById("original").textContent = "Original Function: " + funcExpr;
-    document.getElementById("first").textContent = "First Derivative: " + firstDerivative;
-    document.getElementById("second").textContent = "Second Derivative: " + secondDerivative;
-
-    generateGraph(funcExpr, firstDerivative, secondDerivative);
 }
