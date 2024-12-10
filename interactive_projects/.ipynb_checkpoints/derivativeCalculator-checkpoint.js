@@ -44,7 +44,7 @@ function evaluateFunction(funcExpr, xVals) {
 
 function generateGraph(funcExpr, firstDerivative, secondDerivative) {
     // Generate x values from -100 to 100
-    const xVals = Array.from({ length: 201 }, (_, i) => -100 + i).map((x) => Math.round(x * 100) / 100); // Ensures clean integers
+    const xVals = Array.from({ length: 201 }, (_, i) => -100 + i);
 
     // Evaluate function and derivatives
     const yVals = evaluateFunction(funcExpr, xVals);
@@ -55,7 +55,7 @@ function generateGraph(funcExpr, firstDerivative, secondDerivative) {
     const config = {
         type: "line",
         data: {
-            labels: xVals.map((x) => x.toFixed(0)), // Convert x values to clean integers for display
+            labels: xVals,
             datasets: [
                 {
                     label: "f(x)",
@@ -83,10 +83,7 @@ function generateGraph(funcExpr, firstDerivative, secondDerivative) {
                 x: {
                     title: { display: true, text: "x" },
                     ticks: {
-                        callback: (value, index) => {
-                            // Display every 10th tick for clarity
-                            return index % 10 === 0 ? value : "";
-                        },
+                        stepSize: 5, // Only show labels at intervals of 5
                     },
                 },
                 y: {
