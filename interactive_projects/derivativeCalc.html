@@ -4,20 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Derivative Calculator</title>
+    <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="derivativeCalculator.js"></script>
 </head>
 <body>
-    <h1>Derivative Calculator</h1>
-    <label for="function">Enter a polynomial or function:</label>
-    <input type="text" id="function" placeholder="x**3 - 5*x**2 + 3*x">
-    <button onclick="calculateAndPlot()">Calculate and Plot</button>
-    <button onclick="randomInput()">Random Function</button>
-    <div id="results">
-        <p id="original"></p>
-        <p id="first"></p>
-        <p id="second"></p>
+    <div class="container">
+        <h1>Derivative Calculator</h1>
+        <div class="input-section">
+            <label for="function">Enter a polynomial or function:</label>
+            <input type="text" id="function" placeholder="e.g., x**3 - 5*x**2 + 3*x">
+            <div class="buttons">
+                <button class="btn calculate" onclick="calculateAndPlot()">Calculate and Plot</button>
+            </div>
+        </div>
+        <div id="results" class="results">
+            <p id="original"></p>
+            <p id="first"></p>
+            <p id="second"></p>
+        </div>
+        <canvas id="chart" width="800" height="400"></canvas>
     </div>
-    <canvas id="chart" width="800" height="400"></canvas>
 </body>
 </html>

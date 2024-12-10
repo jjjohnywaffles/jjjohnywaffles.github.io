@@ -1,16 +1,3 @@
-function randomInput() {
-    const randomValue = [
-        "x**3 - 5*x**2 + 3*x",
-        "2*x**4 + 5*x**3 - x",
-        "x**2 + sin(x)",
-        "e**x - x",
-    ];
-
-    const randomExpression = Math.floor(Math.random() * randomValue.length);
-    document.getElementById("function").value = randomValue[randomExpression];
-    calculateAndPlot();
-}
-
 function calculateAndPlot() {
     try {
         const funcExpr = document.getElementById("function").value;
@@ -90,9 +77,9 @@ function generateGraph(funcExpr, firstDerivative, secondDerivative) {
         data: {
             labels: xVals,
             datasets: [
-                { label: "f(x)", data: yVals, borderColor: "blue", fill: false },
-                { label: "f'(x)", data: yPrimeVals, borderColor: "orange", fill: false },
-                { label: "f''(x)", data: yDoublePrimeVals, borderColor: "green", fill: false },
+                { label: "f(x)", data: yVals, borderColor: "blue", fill: false, tension: 0.1, pointRadius: 0 },
+                { label: "f'(x)", data: yPrimeVals, borderColor: "orange", fill: false, tension: 0.1, pointRadius: 0 },
+                { label: "f''(x)", data: yDoublePrimeVals, borderColor: "green", fill: false, tension: 0.1, pointRadius: 0 },
             ],
         },
         options: {
