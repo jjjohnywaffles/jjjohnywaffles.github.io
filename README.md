@@ -59,14 +59,6 @@ Highlighted Projects:
 - [Algorithms](https://github.com/jjjohnywaffles/Algorithms)
 - [Professional Development](profDev/projectindex.html)
 
-## Contact
-
-For inquiries or collaborations, reach out via:
-
-- **Phone**: 916-960-3725
-- **Email**: [johu5262@colorado.edu](mailto:johu5262@colorado.edu)
-- **Website**: [jjjohnywaffles.github.io](https://jjjohnywaffles.github.io)
-
 ### Social Profiles
 
 - [GitHub](https://github.com/jjjohnywaffles)
