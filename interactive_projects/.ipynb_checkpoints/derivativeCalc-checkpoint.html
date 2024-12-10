@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Derivative Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .calculator {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .calculator h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .results {
+            margin-top: 20px;
+        }
+        .results div {
+            margin-bottom: 10px;
+        }
+        .chart {
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <section class="calculator">
+        <h2>Derivative Calculator</h2>
+        <div class="input-group">
+            <label for="function">Enter a polynomial function (e.g., x**2 + 3*x - 5):</label>
+            <input type="text" id="function" placeholder="x**2 + 3*x - 5">
+        </div>
+        <button id="calculate">Calculate Derivatives</button>
+        <div class="results">
+            <div id="original">Original Function: </div>
+            <div id="first">First Derivative: </div>
+            <div id="second">Second Derivative: </div>
+        </div>
+        <div class="chart">
+            <canvas id="graph" width="600" height="400"></canvas>
+        </div>
+    </section>
+
+    <script>
+        document.getElementById("calculate").addEventListener("click", () => {
+            const functionInput = document.getElementById("function").value;
+
+            fetch("/calculate-derivative", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ function: functionInput })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("original").textContent = "Original Function: " + data.original;
+                    document.getElementById("first").textContent = "First Derivative: " + data.first;
+                    document.getElementById("second").textContent = "Second Derivative: " + data.second;
+                    
+                    drawGraph(data.graph);
+                })
+                .catch(error => console.error("Error:", error));
+        });
+
+        function drawGraph(graphData) {
+            const ctx = document.getElementById("graph").getContext("2d");
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: graphData.x,
+                    datasets: [
+                        {
+                            label: "f(x)",
+                            data: graphData.y,
+                            borderColor: "blue",
+                            fill: false
+                        },
+                        {
+                            label: "f'(x)",
+                            data: graphData.yPrime,
+                            borderColor: "orange",
+                            fill: false
+                        },
+                        {
+                            label: "f''(x)",
+                            data: graphData.yDoublePrime,
+                            borderColor: "green",
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: "x"
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: "y"
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</body>
+</html>
