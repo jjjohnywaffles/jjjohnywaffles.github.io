@@ -43,7 +43,7 @@ function evaluateFunction(funcExpr, xVals) {
 }
 
 function generateGraph(funcExpr, firstDerivative, secondDerivative) {
-    const xVals = Array.from({ length: 500 }, (_, i) => -10 + (i / 500) * 20); // Range: -10 to 10
+    const xVals = Array.from({ length: 201 }, (_, i) => -100 + i); // Range: -100 to 100 with step 1
     const yVals = evaluateFunction(funcExpr, xVals);
     const yPrimeVals = evaluateFunction(firstDerivative, xVals);
     const yDoublePrimeVals = evaluateFunction(secondDerivative, xVals);
@@ -79,6 +79,9 @@ function generateGraph(funcExpr, firstDerivative, secondDerivative) {
             scales: {
                 x: {
                     title: { display: true, text: "x" },
+                    ticks: {
+                        callback: (value, index) => (index % 20 === 0 ? value : ""), // Show every 20th tick
+                    },
                 },
                 y: {
                     title: { display: true, text: "y" },
