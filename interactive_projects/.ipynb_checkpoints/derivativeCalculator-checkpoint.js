@@ -43,13 +43,21 @@ function evaluateFunction(funcExpr, xVals) {
 }
 
 function generateGraph(funcExpr, firstDerivative, secondDerivative) {
-    // Generate x values from -100 to 100
-    const xVals = Array.from({ length: 201 }, (_, i) => -100 + i);
+    // Generate x values from -10 to 10 with finer intervals
+    const xVals = Array.from({ length: 401 }, (_, i) => -10 + i * 0.05);
 
     // Evaluate function and derivatives
     const yVals = evaluateFunction(funcExpr, xVals);
     const yPrimeVals = evaluateFunction(firstDerivative, xVals);
     const yDoublePrimeVals = evaluateFunction(secondDerivative, xVals);
+
+    // Ensure valid y-values and filter NaN or Infinity
+    const allYVals = [...yVals, ...yPrimeVals, ...yDoublePrimeVals].filter(
+        (val) => isFinite(val)
+    );
+
+    const yMin = Math.min(...allYVals);
+    const yMax = Math.max(...allYVals);
 
     const ctx = document.getElementById("chart").getContext("2d");
     const config = {
@@ -82,14 +90,11 @@ function generateGraph(funcExpr, firstDerivative, secondDerivative) {
             scales: {
                 x: {
                     title: { display: true, text: "x" },
-                    ticks: {
-                        stepSize: 5, // Only show labels at intervals of 5
-                    },
                 },
                 y: {
                     title: { display: true, text: "y" },
-                    suggestedMin: Math.min(...yVals, ...yPrimeVals, ...yDoublePrimeVals) * 1.2,
-                    suggestedMax: Math.max(...yVals, ...yPrimeVals, ...yDoublePrimeVals) * 1.2,
+                    min: yMin - Math.abs(yMin * 0.1), // Add buffer below min
+                    max: yMax + Math.abs(yMax * 0.1), // Add buffer above max
                 },
             },
         },
