@@ -10,8 +10,8 @@ function calculateManualDerivative(funcExpr) {
         term = term.trim();
         if (term.includes("x**")) {
             const parts = term.split("x**");
-            const coef = parts[0].replace("*", "").trim() === "" ? 1 : parseInt(parts[0]);
-            const power = parseInt(parts[1]);
+            const coef = parts[0].replace("*", "").trim() === "" ? 1 : parseFloat(parts[0]);
+            const power = parseFloat(parts[1]);
             const newCoef = coef * power;
             const newPower = power - 1;
             if (newPower === 0) {
@@ -22,7 +22,7 @@ function calculateManualDerivative(funcExpr) {
                 derivativeTerms.push(`${newCoef}*x**${newPower}`);
             }
         } else if (term.includes("x")) {
-            const coef = term.replace("*x", "").trim() === "" ? 1 : parseInt(term.replace("*x", "").trim());
+            const coef = term.replace("*x", "").trim() === "" ? 1 : parseFloat(term.replace("*x", "").trim());
             derivativeTerms.push(`${coef}`);
         }
     });
@@ -32,31 +32,21 @@ function calculateManualDerivative(funcExpr) {
 
 function evaluateFunction(funcExpr, xVals) {
     return xVals.map((x) => {
-        let expr = funcExpr.replace(/x/g, `(${x})`);
-        return eval(expr);
+        try {
+            const expr = funcExpr.replace(/x/g, `(${x})`);
+            return eval(expr);
+        } catch (error) {
+            console.error("Error evaluating expression:", error);
+            return NaN;
+        }
     });
 }
 
-function calculate() {
-    const inputFunction = document.getElementById("function").value;
-    const firstDerivative = calculateManualDerivative(inputFunction);
-    const secondDerivative = calculateManualDerivative(firstDerivative);
-
-    document.getElementById("original").textContent = "Original Function: " + inputFunction;
-    document.getElementById("first").textContent = "First Derivative: " + firstDerivative;
-    document.getElementById("second").textContent = "Second Derivative: " + secondDerivative;
-
-    // Generate and plot graphs
-    const xVals = Array.from({ length: 100 }, (_, i) => i - 50); // Range from -50 to 50
-    const yVals = evaluateFunction(inputFunction, xVals);
+function generateGraph(funcExpr, firstDerivative, secondDerivative) {
+    const xVals = Array.from({ length: 500 }, (_, i) => -10 + (i / 500) * 20); // Range: -10 to 10
+    const yVals = evaluateFunction(funcExpr, xVals);
     const yPrimeVals = evaluateFunction(firstDerivative, xVals);
     const yDoublePrimeVals = evaluateFunction(secondDerivative, xVals);
-
-    drawGraph(xVals, yVals, yPrimeVals, yDoublePrimeVals);
-}
-
-function drawGraph(xVals, yVals, yPrimeVals, yDoublePrimeVals) {
-    const stacked = document.getElementById("stacked").checked; // Check if user wants stacked or side-by-side
 
     const ctx = document.getElementById("chart").getContext("2d");
     const config = {
@@ -85,27 +75,34 @@ function drawGraph(xVals, yVals, yPrimeVals, yDoublePrimeVals) {
             ],
         },
         options: {
-            plugins: {
-                legend: { display: true },
-            },
+            responsive: true,
             scales: {
                 x: {
                     title: { display: true, text: "x" },
                 },
                 y: {
                     title: { display: true, text: "y" },
-                    suggestedMin: -1000, // Adjust to better fit your data
-                    suggestedMax: 1000, // Adjust to better fit your data
+                    suggestedMin: Math.min(...yVals, ...yPrimeVals, ...yDoublePrimeVals) * 1.2,
+                    suggestedMax: Math.max(...yVals, ...yPrimeVals, ...yDoublePrimeVals) * 1.2,
                 },
             },
         },
     };
 
-    if (!stacked) {
-        config.options.aspectRatio = 2; // Widen the chart for side-by-side
+    if (window.myChart) {
+        window.myChart.destroy();
     }
-
-    // Destroy any existing chart before creating a new one
-    if (window.myChart) window.myChart.destroy();
     window.myChart = new Chart(ctx, config);
+}
+
+function calculateAndPlot() {
+    const funcExpr = document.getElementById("function").value;
+    const firstDerivative = calculateManualDerivative(funcExpr);
+    const secondDerivative = calculateManualDerivative(firstDerivative);
+
+    document.getElementById("original").textContent = "Original Function: " + funcExpr;
+    document.getElementById("first").textContent = "First Derivative: " + firstDerivative;
+    document.getElementById("second").textContent = "Second Derivative: " + secondDerivative;
+
+    generateGraph(funcExpr, firstDerivative, secondDerivative);
 }

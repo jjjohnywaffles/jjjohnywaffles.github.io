@@ -9,12 +9,9 @@
 </head>
 <body>
     <h1>Derivative Calculator</h1>
-    <label for="function">Enter a polynomial function (e.g., x**2 + 3*x - 5):</label>
-    <input type="text" id="function" placeholder="x**2 + 3*x - 5">
-    <button onclick="calculate()">Calculate Derivatives</button>
-    <label>
-        <input type="checkbox" id="stacked"> Show Plots Stacked
-    </label>
+    <label for="function">Enter a polynomial function (e.g., x**3 - 5*x**2 + 3*x):</label>
+    <input type="text" id="function" placeholder="x**3 - 5*x**2 + 3*x">
+    <button onclick="calculateAndPlot()">Calculate and Plot</button>
     <div id="results">
         <p id="original"></p>
         <p id="first"></p>
