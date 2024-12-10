@@ -60,26 +60,50 @@ function evaluateFunction(funcExpr, xVals) {
 }
 
 function generateGraph(funcExpr, firstDerivative, secondDerivative) {
-    const xVals = Array.from({ length: 401 }, (_, i) => -10 + i * 0.05);
+    // Generate x values from -10 to 10 with correct step size
+    const xVals = Array.from({ length: 401 }, (_, i) => -10 + i * (20 / 400));
 
+    // Evaluate function and derivatives
     const yVals = evaluateFunction(funcExpr, xVals);
     const yPrimeVals = evaluateFunction(firstDerivative, xVals);
     const yDoublePrimeVals = evaluateFunction(secondDerivative, xVals);
 
+    // Filter valid y-values and determine min/max for y-axis
     const allYVals = [...yVals, ...yPrimeVals, ...yDoublePrimeVals].filter((val) => isFinite(val));
-
     const yMin = Math.min(...allYVals) - Math.abs(Math.min(...allYVals) * 0.1);
     const yMax = Math.max(...allYVals) + Math.abs(Math.max(...allYVals) * 0.1);
 
+    // Configure Chart.js graph
     const ctx = document.getElementById("chart").getContext("2d");
     const config = {
         type: "line",
         data: {
             labels: xVals,
             datasets: [
-                { label: "f(x)", data: yVals, borderColor: "blue", fill: false, tension: 0.1, pointRadius: 0 },
-                { label: "f'(x)", data: yPrimeVals, borderColor: "orange", fill: false, tension: 0.1, pointRadius: 0 },
-                { label: "f''(x)", data: yDoublePrimeVals, borderColor: "green", fill: false, tension: 0.1, pointRadius: 0 },
+                {
+                    label: "f(x)",
+                    data: yVals,
+                    borderColor: "blue",
+                    fill: false,
+                    tension: 0.1,
+                    pointRadius: 0,
+                },
+                {
+                    label: "f'(x)",
+                    data: yPrimeVals,
+                    borderColor: "orange",
+                    fill: false,
+                    tension: 0.1,
+                    pointRadius: 0,
+                },
+                {
+                    label: "f''(x)",
+                    data: yDoublePrimeVals,
+                    borderColor: "green",
+                    fill: false,
+                    tension: 0.1,
+                    pointRadius: 0,
+                },
             ],
         },
         options: {
@@ -91,6 +115,7 @@ function generateGraph(funcExpr, firstDerivative, secondDerivative) {
         },
     };
 
+    // Destroy old chart if it exists, and create a new one
     if (window.myChart) {
         window.myChart.destroy();
     }

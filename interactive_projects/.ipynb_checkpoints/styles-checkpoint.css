@@ -79,3 +79,29 @@ canvas {
     display: block;
     width: 100%;
 }
+datasets: [
+    {
+        label: "f(x)",
+        data: yVals,
+        borderColor: "blue",
+        fill: false,
+        tension: 0.1, // Smooth line
+        pointRadius: 0, // Removes dots
+    },
+    {
+        label: "f'(x)",
+        data: yPrimeVals,
+        borderColor: "orange",
+        fill: false,
+        tension: 0.1, // Smooth line
+        pointRadius: 0, // Removes dots
+    },
+    {
+        label: "f''(x)",
+        data: yDoublePrimeVals,
+        borderColor: "green",
+        fill: false,
+        tension: 0.1, // Smooth line
+        pointRadius: 0, // Removes dots
+    },
+],
