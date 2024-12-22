@@ -20,7 +20,7 @@ let gameStarted = false;
 let pipes = [];
 let pipeWidth = 65; // Wider pipes
 let pipeGap = 180; // Larger gap between pipes
-let pipeSpeed = 1.5; // Adjusted pipe speed for the larger game
+let pipeSpeed = 1.8; // Adjusted pipe speed for the larger game
 
 let score = 0;
 
@@ -60,14 +60,23 @@ function updateScore() {
 let lastPipeY = canvas.height / 2; // Initialize the last pipe's Y position
 
 function spawnPipe() {
-    // Define a maximum allowed vertical shift between consecutive pipes
-    const maxVerticalShift = 350; // Adjust this value for difficulty
+    // Define the base vertical shift range
+    const baseShift = 200; // Standard vertical shift
+    const randomShift = Math.random() < 0.3 ? 100 : 0; // Occasionally allow a larger shift (20% chance)
 
-    // Calculate a new pipe height constrained by the previous pipe's position
-    let pipeHeight = lastPipeY + Math.floor((Math.random() * 2 - 1) * maxVerticalShift);
+    // Define the minimum vertical shift between pipes
+    const minVerticalShift = 50; // Ensure pipes don't appear at the same height
 
-    // Ensure the new pipe height stays within the canvas bounds
-    pipeHeight = Math.max(50, Math.min(pipeHeight, canvas.height - pipeGap - 50));
+    let pipeHeight;
+    do {
+        // Calculate a new pipe height
+        pipeHeight = lastPipeY + Math.floor((Math.random() * 2 - 1) * (baseShift + randomShift));
+
+        // Ensure the new pipe height stays within the canvas bounds
+        pipeHeight = Math.max(50, Math.min(pipeHeight, canvas.height - pipeGap - 50));
+
+        // Repeat if the height shift is less than the minimum vertical shift
+    } while (Math.abs(pipeHeight - lastPipeY) < minVerticalShift);
 
     // Create the pipe
     pipes.push({
@@ -79,6 +88,7 @@ function spawnPipe() {
     // Update the last pipe's position
     lastPipeY = pipeHeight;
 }
+
 
 // Function to update and draw the game
 function gameLoop() {
