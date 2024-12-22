@@ -72,6 +72,11 @@ bottomExtendPipeImage.src = 'images/bottomextendpipe.png'; // Path to the bottom
 const backgroundImage = new Image();
 backgroundImage.src = 'images/valley.png'; // Path to the background image
 
+// Ensure the background image is drawn initially
+backgroundImage.onload = () => {
+    ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+};
+
 // Function to draw a tall pipe dynamically
 function drawPipe(ctx, x, y, width, height, isTopPipe) {
     const extendPipeImage = isTopPipe ? topExtendPipeImage : bottomExtendPipeImage;
