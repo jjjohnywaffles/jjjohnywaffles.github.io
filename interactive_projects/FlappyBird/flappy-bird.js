@@ -18,9 +18,9 @@ let isGameOver = false;
 let gameStarted = false;
 
 let pipes = [];
-let pipeWidth = 75; // Wider pipes
+let pipeWidth = 65; // Wider pipes
 let pipeGap = 180; // Larger gap between pipes
-let pipeSpeed = 1.8; // Adjusted pipe speed for the larger game
+let pipeSpeed = 1.5; // Adjusted pipe speed for the larger game
 
 let score = 0;
 
