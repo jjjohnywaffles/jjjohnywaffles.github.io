@@ -57,13 +57,27 @@ function updateScore() {
 }
 
 // Function to spawn pipes
+let lastPipeY = canvas.height / 2; // Initialize the last pipe's Y position
+
 function spawnPipe() {
-    const pipeHeight = Math.floor(Math.random() * (canvas.height - pipeGap - 100) + 50);
+    // Define a maximum allowed vertical shift between consecutive pipes
+    const maxVerticalShift = 350; // Adjust this value for difficulty
+
+    // Calculate a new pipe height constrained by the previous pipe's position
+    let pipeHeight = lastPipeY + Math.floor((Math.random() * 2 - 1) * maxVerticalShift);
+
+    // Ensure the new pipe height stays within the canvas bounds
+    pipeHeight = Math.max(50, Math.min(pipeHeight, canvas.height - pipeGap - 50));
+
+    // Create the pipe
     pipes.push({
         x: canvas.width,
         y: pipeHeight,
         passed: false,
     });
+
+    // Update the last pipe's position
+    lastPipeY = pipeHeight;
 }
 
 // Function to update and draw the game
