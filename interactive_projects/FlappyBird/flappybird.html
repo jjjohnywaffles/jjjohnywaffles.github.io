@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #333; /* Dark gray background */
+            color: white; /* Light text for contrast */
+            font-family: Arial, sans-serif;
+            margin: 0;
+            height: 100vh; /* Full height layout */
+        }
+        h1 {
+            margin-bottom: 10px;
+            font-size: 36px;
+        }
+        #scoreDisplay {
+            font-size: 24px; 
+            margin-bottom: 20px;
+        }
+        canvas {
+            border: 2px solid black; /* Thicker border for visibility */
+            background: linear-gradient(to bottom, #87ceeb, #f0e68c); /* Sky to ground gradient */
+        }
+        button {
+            margin-top: 15px;
+            padding: 15px 30px;
+            font-size: 20px; 
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Flappy Bird Game</h1>
+    <div id="scoreDisplay">Score: 0</div>
+    <canvas id="gameCanvas" width="480" height="720"></canvas> 
+    <button id="startButton">Start Game</button>
+    <script src="flappy-bird.js"></script>
+</body>
+</html>

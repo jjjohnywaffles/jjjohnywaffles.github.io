@@ -687,7 +687,16 @@ span.single-timeline-horizontal.spacial-horizontal-line {width: 88px;}
 
 
 /*-------------------------------------
-        10. Contact
+        10. Interactive Projects
+--------------------------------------*/
+#interactive-projects .item img {
+    width: 80%; /* Adjust the percentage to control the size */
+    margin: 0 auto; /* Center the images */
+    display: block;
+}
+
+/*-------------------------------------
+        11. Contact
 --------------------------------------*/
 .contact-content {
     display: flex;
@@ -790,4 +799,4 @@ span.single-timeline-horizontal.spacial-horizontal-line {width: 88px;}
     0%   {bottom:0px;}
     100%  {bottom:7px;}
 }
-/*========================Thank you=================
+/*
