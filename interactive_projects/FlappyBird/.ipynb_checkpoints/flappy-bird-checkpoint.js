@@ -5,7 +5,7 @@ const scoreDisplay = document.getElementById('scoreDisplay');
 
 // Load the bird image
 const birdImage = new Image();
-birdImage.src = 'bird.png'; // Path to your bird image file
+birdImage.src = 'images/bird.png'; // Path to your bird image file
 
 // Game variables
 let birdX = 100; // Starting position
@@ -56,6 +56,56 @@ function updateScore() {
     scoreDisplay.textContent = `Score: ${score}`;
 }
 
+// Load the pipe image
+const bottomPipeImage = new Image();
+bottomPipeImage.src = 'images/bottompipe.png'; // Path to the bottom pipe image
+
+const topPipeImage = new Image();
+topPipeImage.src = 'images/toppipe.png'; // Path to the top pipe image
+
+const topExtendPipeImage = new Image();
+topExtendPipeImage.src = 'images/topextendpipe.png'; // Path to the top extendable section
+
+const bottomExtendPipeImage = new Image();
+bottomExtendPipeImage.src = 'images/bottomextendpipe.png'; // Path to the bottom extendable section
+
+const backgroundImage = new Image();
+backgroundImage.src = 'images/valley.png'; // Path to the background image
+
+
+// Function to draw a tall pipe dynamically
+function drawPipe(ctx, x, y, width, height, isTopPipe) {
+    const extendPipeImage = isTopPipe ? topExtendPipeImage : bottomExtendPipeImage;
+    const capHeight = 20; // Height of the pipe's cap (adjust based on your images)
+
+    if (isTopPipe) {
+        // For top pipes, start drawing from the bottom upwards
+        // Draw the top cap
+        ctx.drawImage(topPipeImage, x, y + height - capHeight, width, capHeight);
+
+        // Tile the middle section upwards
+        let currentY = y + height - capHeight;
+        while (currentY > y) {
+            const drawHeight = Math.min(extendPipeImage.height, currentY - y);
+            ctx.drawImage(extendPipeImage, x, currentY - drawHeight, width, drawHeight);
+            currentY -= drawHeight;
+        }
+    } else {
+        // For bottom pipes, draw from top to bottom
+        // Draw the bottom cap
+        ctx.drawImage(bottomPipeImage, x, y, width, capHeight);
+
+        // Tile the middle section downwards
+        let currentY = y + capHeight;
+        while (currentY < y + height) { // Adjust the condition to include the remaining height
+            const drawHeight = Math.min(extendPipeImage.height, y + height - currentY);
+            ctx.drawImage(extendPipeImage, x, currentY, width, drawHeight);
+            currentY += drawHeight;
+        }
+    }
+}
+
+
 // Function to spawn pipes
 let lastPipeY = canvas.height / 2; // Initialize the last pipe's Y position
 
@@ -78,17 +128,26 @@ function spawnPipe() {
         // Repeat if the height shift is less than the minimum vertical shift
     } while (Math.abs(pipeHeight - lastPipeY) < minVerticalShift);
 
-    // Create the pipe
+    // Create the pipes with x, y, and height properties
     pipes.push({
         x: canvas.width,
-        y: pipeHeight,
+        y: pipeHeight, // Top pipe's bottom edge
+        height: pipeHeight, // Top pipe's height
+        isTopPipe: true, // Mark this as a top pipe
+        passed: false,
+    });
+
+    pipes.push({
+        x: canvas.width,
+        y: pipeHeight + pipeGap, // Bottom pipe's top edge
+        height: canvas.height - (pipeHeight + pipeGap), // Bottom pipe's height
+        isTopPipe: false, // Mark this as a bottom pipe
         passed: false,
     });
 
     // Update the last pipe's position
     lastPipeY = pipeHeight;
 }
-
 
 // Function to update and draw the game
 function gameLoop() {
@@ -101,50 +160,45 @@ function gameLoop() {
         return;
     }
 
+    // Clear the canvas and draw the background
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
 
-    // Draw bird (using the custom image)
-    const birdWidth = birdRadius * 2; // Scale image width
-    const birdHeight = birdRadius * 2; // Scale image height
+    // Draw the bird
+    const birdWidth = birdRadius * 2;
+    const birdHeight = birdRadius * 2;
     ctx.drawImage(birdImage, birdX - birdRadius, birdY - birdRadius, birdWidth, birdHeight);
 
     // Draw and move pipes
-    ctx.fillStyle = 'green';
     pipes.forEach((pipe, index) => {
-        // Draw top and bottom pipes
-        ctx.fillRect(pipe.x, 0, pipeWidth, pipe.y);
-        ctx.fillRect(pipe.x, pipe.y + pipeGap, pipeWidth, canvas.height);
-    
+        drawPipe(ctx, pipe.x, pipe.isTopPipe ? pipe.y - pipe.height : pipe.y, pipeWidth, pipe.height, pipe.isTopPipe);
+
         // Move pipes to the left
         pipe.x -= pipeSpeed;
-    
+
         // Check if the bird passed the pipe (scoring)
-        if (!pipe.passed && pipe.x + pipeWidth < birdX) {
+        if (!pipe.passed && pipe.isTopPipe === false && pipe.x + pipeWidth < birdX) {
             score++;
             pipe.passed = true;
             updateScore();
         }
-    
-        // Collision detection with the visible part of the pipes
+
+        // Collision detection
         const withinPipeX = birdX + birdRadius > pipe.x && birdX - birdRadius < pipe.x + pipeWidth;
-        const hitTopPipe = birdY - birdRadius < pipe.y;
-        const hitBottomPipe = birdY + birdRadius > pipe.y + pipeGap;
-    
+        const hitTopPipe = pipe.isTopPipe && birdY - birdRadius < pipe.y;
+        const hitBottomPipe = !pipe.isTopPipe && birdY + birdRadius > pipe.y;
+
         if (withinPipeX && (hitTopPipe || hitBottomPipe)) {
             isGameOver = true;
         }
-    
-        // Remove pipes that are fully off-screen
-        if (pipe.x + pipeWidth < -10) { // Buffer of -10 to avoid flickering
-            pipes.splice(index, 1);
-        }
-    });
 
+    });
+    pipes = pipes.filter(pipe => pipe.x + pipeWidth >= -10);
+    
     // Spawn pipes at intervals
     if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 300) {
         spawnPipe();
     }
-
     // Bird movement
     birdY += birdVelocity;
     birdVelocity = Math.min(birdVelocity + gravity, maxVelocity);
@@ -152,6 +206,6 @@ function gameLoop() {
     if (birdY + birdRadius > canvas.height || birdY - birdRadius < 0) {
         isGameOver = true;
     }
-
     requestAnimationFrame(gameLoop);
 }
+
