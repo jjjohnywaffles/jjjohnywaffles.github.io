@@ -61,11 +61,11 @@ let lastPipeY = canvas.height / 2; // Initialize the last pipe's Y position
 
 function spawnPipe() {
     // Define the base vertical shift range
-    const baseShift = 200; // Standard vertical shift
+    const baseShift = 250; // Standard vertical shift
     const randomShift = Math.random() < 0.3 ? 100 : 0; // Occasionally allow a larger shift (20% chance)
 
     // Define the minimum vertical shift between pipes
-    const minVerticalShift = 50; // Ensure pipes don't appear at the same height
+    const minVerticalShift = 75; // Ensure pipes don't appear at the same height
 
     let pipeHeight;
     do {
