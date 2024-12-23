@@ -11,16 +11,16 @@ birdImage.src = 'images/bird.png'; // Path to your bird image file
 let birdX = 100; // Starting position
 let birdY = 200;
 let birdRadius = 20; // This determines the bird's display size
-let gravity = 0.15; 
+let gravity = 0.15 * 60; 
 let birdVelocity = 0;
-let maxVelocity = 2.5; // Limit falling speed
+let maxVelocity = 2.5 * 60; // Limit falling speed
 let isGameOver = false;
 let gameStarted = false;
 
 let pipes = [];
 let pipeWidth = 65; // Wider pipes
 let pipeGap = 180; // Larger gap between pipes
-let pipeSpeed = 1.8; // Adjusted pipe speed for the larger game
+let pipeSpeed = 1.8 * 60; // Adjusted pipe speed for the larger game
 
 let score = 0;
 let lastTime = 0; // Stores the timestamp of the previous frame
