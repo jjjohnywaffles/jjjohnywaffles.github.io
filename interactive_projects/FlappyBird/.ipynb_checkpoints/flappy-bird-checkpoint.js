@@ -23,6 +23,7 @@ let pipeGap = 180; // Larger gap between pipes
 let pipeSpeed = 1.8; // Adjusted pipe speed for the larger game
 
 let score = 0;
+let lastTime = 0; // Stores the timestamp of the previous frame
 
 // Start button functionality
 startButton.addEventListener('click', () => {
@@ -35,7 +36,8 @@ startButton.addEventListener('click', () => {
     updateScore();
     startButton.disabled = true;
     startButton.style.visibility = 'hidden';
-    gameLoop();
+    lastTime = 0; // Reset the timer
+    requestAnimationFrame(gameLoop); // Start the game loop with a timestamp
 });
 
 // Space bar and mouse click functionality
@@ -71,6 +73,11 @@ bottomExtendPipeImage.src = 'images/bottomextendpipe.png'; // Path to the bottom
 
 const backgroundImage = new Image();
 backgroundImage.src = 'images/valley.png'; // Path to the background image
+
+// Ensure the background image is drawn initially
+backgroundImage.onload = () => {
+    ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+};
 
 // Function to draw a tall pipe dynamically
 function drawPipe(ctx, x, y, width, height, isTopPipe) {
@@ -148,8 +155,15 @@ function spawnPipe() {
     lastPipeY = pipeHeight;
 }
 
+
+
 // Function to update and draw the game
-function gameLoop() {
+function gameLoop(timestamp) {
+    if (lastTime === 0) lastTime = timestamp; // Initialize the lastTime on the first frame
+
+    const deltaTime = (timestamp - lastTime) / 1000; // Time elapsed in seconds
+    lastTime = timestamp; // Update the lastTime to the current frame
+
     if (isGameOver) {
         ctx.fillStyle = 'red';
         ctx.font = '40px Arial';
@@ -172,11 +186,11 @@ function gameLoop() {
     pipes.forEach((pipe, index) => {
         drawPipe(ctx, pipe.x, pipe.isTopPipe ? pipe.y - pipe.height : pipe.y, pipeWidth, pipe.height, pipe.isTopPipe);
 
-        // Move pipes to the left
-        pipe.x -= pipeSpeed;
+        // Move pipes to the left (scaled by deltaTime)
+        pipe.x -= pipeSpeed * deltaTime;
 
         // Check if the bird passed the pipe (scoring)
-        if (!pipe.passed && pipe.isTopPipe === false && pipe.x + pipeWidth < birdX) {
+        if (!pipe.passed && !pipe.isTopPipe && pipe.x + pipeWidth < birdX) {
             score++;
             pipe.passed = true;
             updateScore();
@@ -190,21 +204,25 @@ function gameLoop() {
         if (withinPipeX && (hitTopPipe || hitBottomPipe)) {
             isGameOver = true;
         }
-
     });
+
+    // Filter out pipes that are off-screen
     pipes = pipes.filter(pipe => pipe.x + pipeWidth >= -10);
-    
+
     // Spawn pipes at intervals
     if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 300) {
         spawnPipe();
     }
-    // Bird movement
-    birdY += birdVelocity;
-    birdVelocity = Math.min(birdVelocity + gravity, maxVelocity);
+
+    // Bird movement (scaled by deltaTime)
+    birdY += birdVelocity * deltaTime;
+    birdVelocity = Math.min(birdVelocity + gravity * deltaTime, maxVelocity);
 
     if (birdY + birdRadius > canvas.height || birdY - birdRadius < 0) {
         isGameOver = true;
     }
+
+    // Request the next frame
     requestAnimationFrame(gameLoop);
 }
 
