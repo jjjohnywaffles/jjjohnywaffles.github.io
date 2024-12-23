@@ -39,12 +39,12 @@ let birdRadius = 20; // For collision size
 // - gravity (px/sec^2)
 // - birdVelocity (px/sec)
 // - maxVelocity (px/sec)
-let gravity = 600;       
+let gravity = 2400;       
 let birdVelocity = 0;    
 let maxVelocity = 500;   
 
 // If you’d like smaller or bigger jumps, tweak this:
-const jumpStrength = 325; // px/sec upward
+const jumpStrength = 600; // px/sec upward
 
 let isGameOver = false;
 let gameStarted = false;
@@ -55,7 +55,7 @@ let pipeWidth = 65;
 let pipeGap = 180;
 
 // pipeSpeed is now “px/sec”
-let pipeSpeed = 180; 
+let pipeSpeed = 360; 
 
 let score = 0;
 
