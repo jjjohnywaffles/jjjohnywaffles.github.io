@@ -89,9 +89,8 @@
     // "outerTop", "outerBottom", "outerLeft", "outerRight",
     // "innerTop", "innerBottom", "innerLeft", "innerRight"
     let dragItem = null;
-    // Increased hit tolerance for easier grabbing:
+    // Increased hit tolerance and tab size for easier dragging:
     const tolerance = 25;  // pixels for detecting a hit on a line
-    // Enlarged tab size:
     const tabSize = 15;    // size (in pixels) of the draggable tab
 
     // -------------------------------
@@ -117,9 +116,25 @@
       const yCard = (y_canvas - cardY) / scale;
       return { x: xCard, y: yCard };
     }
+    
+    // -------------------------------
+    // Convert touch event to card coordinates (non-rotated).
+    // Returns {x, y} in the card's natural coordinate system.
+    function getTouchPosInCardCoords(evt) {
+      // Prevent default behavior (like scrolling)
+      evt.preventDefault();
+      const touch = evt.touches[0] || evt.changedTouches[0];
+      const rect = canvas.getBoundingClientRect();
+      const x_canvas = touch.clientX - rect.left;
+      const y_canvas = touch.clientY - rect.top;
+      const { cardX, cardY } = getCardBox();
+      const xCard = (x_canvas - cardX) / scale;
+      const yCard = (y_canvas - cardY) / scale;
+      return { x: xCard, y: yCard };
+    }
 
     // -------------------------------
-    // Helper: Check if the mouse position is within the tab attachment area.
+    // Helper: Check if the mouse (or touch) position is within the tab attachment area.
     // For horizontal lines, the tab is centered at (cardImage.width/2, guideValue).
     // For vertical lines, the tab is centered at (guideValue, cardImage.height/2).
     function isWithinTab(pos, guideValue, orientation) {
@@ -253,7 +268,6 @@
     canvas.addEventListener('mousedown', (evt) => {
       if (!cardImage.complete || cardImage.naturalWidth === 0) return;
       const pos = getMousePosInCardCoords(evt);
-      // Check the eight borders for a hit.
       if (Math.abs(pos.y - outerTop) < tolerance || isWithinTab(pos, outerTop, "horizontal")) {
         dragItem = "outerTop"; dragging = true;
       } else if (Math.abs(pos.y - outerBottom) < tolerance || isWithinTab(pos, outerBottom, "horizontal")) {
@@ -276,9 +290,6 @@
     canvas.addEventListener('mousemove', (evt) => {
       if (!dragging) return;
       const pos = getMousePosInCardCoords(evt);
-      // Enforce ordering:
-      // Vertical: outerTop ≤ innerTop ≤ innerBottom ≤ outerBottom.
-      // Horizontal: outerLeft ≤ innerLeft ≤ innerRight ≤ outerRight.
       switch(dragItem) {
         case "outerTop":
           outerTop = Math.min(pos.y, innerTop);
@@ -318,6 +329,75 @@
     });
 
     // -------------------------------
+    // Touch Event Handlers for mobile devices.
+    canvas.addEventListener('touchstart', (evt) => {
+      evt.preventDefault();
+      if (!cardImage.complete || cardImage.naturalWidth === 0) return;
+      const pos = getTouchPosInCardCoords(evt);
+      if (Math.abs(pos.y - outerTop) < tolerance || isWithinTab(pos, outerTop, "horizontal")) {
+        dragItem = "outerTop"; dragging = true;
+      } else if (Math.abs(pos.y - outerBottom) < tolerance || isWithinTab(pos, outerBottom, "horizontal")) {
+        dragItem = "outerBottom"; dragging = true;
+      } else if (Math.abs(pos.x - outerLeft) < tolerance || isWithinTab(pos, outerLeft, "vertical")) {
+        dragItem = "outerLeft"; dragging = true;
+      } else if (Math.abs(pos.x - outerRight) < tolerance || isWithinTab(pos, outerRight, "vertical")) {
+        dragItem = "outerRight"; dragging = true;
+      } else if (Math.abs(pos.y - innerTop) < tolerance || isWithinTab(pos, innerTop, "horizontal")) {
+        dragItem = "innerTop"; dragging = true;
+      } else if (Math.abs(pos.y - innerBottom) < tolerance || isWithinTab(pos, innerBottom, "horizontal")) {
+        dragItem = "innerBottom"; dragging = true;
+      } else if (Math.abs(pos.x - innerLeft) < tolerance || isWithinTab(pos, innerLeft, "vertical")) {
+        dragItem = "innerLeft"; dragging = true;
+      } else if (Math.abs(pos.x - innerRight) < tolerance || isWithinTab(pos, innerRight, "vertical")) {
+        dragItem = "innerRight"; dragging = true;
+      }
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', (evt) => {
+      evt.preventDefault();
+      if (!dragging) return;
+      const pos = getTouchPosInCardCoords(evt);
+      switch(dragItem) {
+        case "outerTop":
+          outerTop = Math.min(pos.y, innerTop);
+          break;
+        case "innerTop":
+          innerTop = Math.min(Math.max(pos.y, outerTop), innerBottom);
+          break;
+        case "innerBottom":
+          innerBottom = Math.max(Math.min(pos.y, outerBottom), innerTop);
+          break;
+        case "outerBottom":
+          outerBottom = Math.max(pos.y, innerBottom);
+          break;
+        case "outerLeft":
+          outerLeft = Math.min(pos.x, innerLeft);
+          break;
+        case "innerLeft":
+          innerLeft = Math.min(Math.max(pos.x, outerLeft), innerRight);
+          break;
+        case "innerRight":
+          innerRight = Math.max(Math.min(pos.x, outerRight), innerLeft);
+          break;
+        case "outerRight":
+          outerRight = Math.max(pos.x, innerRight);
+          break;
+      }
+      drawCanvas();
+    }, { passive: false });
+
+    canvas.addEventListener('touchend', (evt) => {
+      evt.preventDefault();
+      dragging = false;
+      dragItem = null;
+    }, { passive: false });
+    canvas.addEventListener('touchcancel', (evt) => {
+      evt.preventDefault();
+      dragging = false;
+      dragItem = null;
+    }, { passive: false });
+
+    // -------------------------------
     // Rotation slider update.
     rotateSlider.addEventListener('input', () => {
       rotationAngle = parseFloat(rotateSlider.value);
@@ -341,7 +421,6 @@
     // When the image loads, initialize scale and border positions.
     cardImage.onload = () => {
       scale = Math.min(canvas.width / cardImage.width, canvas.height / cardImage.height);
-      // Set measurement borders in natural card coordinates.
       outerTop = cardImage.height * 0.05;
       outerBottom = cardImage.height * 0.95;
       outerLeft = cardImage.width * 0.05;
