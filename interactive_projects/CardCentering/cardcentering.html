@@ -3,7 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <title>Card Centering Tool</title>
+  <!-- Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
   <style>
+    * { box-sizing: border-box; }
     body {
       font-family: 'Roboto', sans-serif;
       background-color: #f0f2f5;
@@ -19,6 +24,16 @@
     }
     .controls {
       margin: 15px;
+      text-align: center;
+    }
+    /* Fixed width for the rotation slider and value display */
+    input[type="range"] {
+      width: 300px;
+    }
+    #angleValue {
+      display: inline-block;
+      width: 50px; /* fixed width so text doesn't change layout */
+      text-align: right;
     }
     /* Container for canvas and info panel */
     #canvasWrapper {
@@ -26,18 +41,39 @@
       max-width: 100%;
       margin: 0 auto;
       text-align: center;
+      position: relative;
+      transition: border 0.3s;
+    }
+    /* Visual cue for dragover */
+    #canvasWrapper.dragover {
+      border: 2px dashed #888;
     }
     #canvasContainer {
       background: #fff;
       padding: 20px;
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      position: relative;
     }
     canvas {
       width: 100%;
       height: auto;
       background: #fff;
       cursor: crosshair;
+    }
+    /* Instruction overlay */
+    #instructions {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255,255,255,0.8);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      text-align: center;
+      font-size: 1rem;
+      width: 80%;
     }
     /* Info panel below the canvas */
     #infoPanel {
@@ -50,28 +86,31 @@
       min-width: 300px;
     }
   </style>
-  <!-- Include Google Font -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
   <h1>Card Centering Tool</h1>
+  
   <!-- Image Upload and Rotation Controls -->
   <div class="controls">
     <input type="file" id="fileInput" accept="image/*">
   </div>
   <div class="controls">
     <label for="rotateSlider">Rotation:</label>
-    <input type="range" id="rotateSlider" min="-15" max="15" value="0">
+    <input type="range" id="rotateSlider" min="-15" max="15" step="0.5" value="0">
     <span id="angleValue">0°</span>
   </div>
   
   <div id="canvasWrapper">
     <div id="canvasContainer">
-      <canvas id="cardCanvas" width="600" height="600"></canvas>
+      <canvas id="cardCanvas" width="800" height="600"></canvas>
+      <!-- Instruction overlay (visible until an image is loaded) -->
+      <div id="instructions">
+        <p>
+          Upload an image by using the browse button, drag and drop your image into this area, or paste an image from your clipboard.
+        </p>
+      </div>
     </div>
-    <!-- Centering Info -->
+    <!-- Centering Info displayed below the canvas -->
     <div id="infoPanel">
       <h3>Centering Info</h3>
       <div id="verticalInfo">Vertical: N/A</div>
@@ -87,6 +126,8 @@
     const angleValue = document.getElementById('angleValue');
     const verticalInfo = document.getElementById('verticalInfo');
     const horizontalInfo = document.getElementById('horizontalInfo');
+    const canvasWrapper = document.getElementById('canvasWrapper');
+    const instructions = document.getElementById('instructions');
 
     let cardImage = new Image();
     let rotationAngle = 0; // degrees
@@ -94,18 +135,15 @@
     let scale = 1;         // computed scale factor
 
     // Measurement borders in natural (non-rotated) card coordinates.
-    // Outer borders (blue)
     let outerTop, outerBottom, outerLeft, outerRight;
-    // Inner borders (neon yellow)
     let innerTop, innerBottom, innerLeft, innerRight;
 
     // Drag state
     let dragging = false;
-    let dragItem = null; // one of "outerTop", "outerBottom", etc.
-    const tolerance = 25;  // extended hit tolerance (in natural card coordinates)
-    const tabSize = 15;    // size of the draggable tab
+    let dragItem = null; // e.g., "outerTop", "innerLeft", etc.
+    const tolerance = 25;  // hit tolerance (in natural card coordinates)
+    const tabSize = 15;    // size of draggable tab
 
-    // Helper: Get card box (rectangle in canvas coordinates where the card is drawn)
     function getCardBox() {
       const cardWidthScaled = cardImage.width * scale;
       const cardHeightScaled = cardImage.height * scale;
@@ -114,7 +152,6 @@
       return { cardX, cardY, cardWidthScaled, cardHeightScaled };
     }
 
-    // Helper: Adjust pointer coordinates based on canvas CSS scaling.
     function getCanvasCoords(evt) {
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
@@ -125,17 +162,12 @@
       };
     }
 
-    // Get mouse position in card's natural coordinates.
     function getMousePosInCardCoords(evt) {
       const pos = getCanvasCoords(evt);
       const { cardX, cardY } = getCardBox();
-      return {
-        x: (pos.x - cardX) / scale,
-        y: (pos.y - cardY) / scale
-      };
+      return { x: (pos.x - cardX) / scale, y: (pos.y - cardY) / scale };
     }
 
-    // Get touch position in card coordinates.
     function getTouchPosInCardCoords(evt) {
       evt.preventDefault();
       const touch = evt.touches[0] || evt.changedTouches[0];
@@ -147,20 +179,14 @@
         y: (touch.clientY - rect.top) * scaleY
       };
       const { cardX, cardY } = getCardBox();
-      return {
-        x: (pos.x - cardX) / scale,
-        y: (pos.y - cardY) / scale
-      };
+      return { x: (pos.x - cardX) / scale, y: (pos.y - cardY) / scale };
     }
 
-    // Helper: Check if a point is in a rectangle.
     function isInRect(pos, rect) {
       return pos.x >= rect.x && pos.x <= rect.x + rect.width &&
              pos.y >= rect.y && pos.y <= rect.y + rect.height;
     }
 
-    // Helper: Compute tab rectangle for a given border.
-    // These values are in card's natural coordinates.
     function getTabRect(border) {
       switch(border) {
         case "outerTop":
@@ -184,13 +210,11 @@
       }
     }
 
-    // Draw the scene.
     function drawCanvas() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       if (!cardImage.complete || cardImage.naturalWidth === 0) return;
       const { cardX, cardY, cardWidthScaled, cardHeightScaled } = getCardBox();
 
-      // Draw rotated card image.
       ctx.save();
       const centerX = cardX + cardWidthScaled/2;
       const centerY = cardY + cardHeightScaled/2;
@@ -203,89 +227,80 @@
         cardImage.height * scale);
       ctx.restore();
 
-      // Draw fixed overlays (non-rotated).
       ctx.lineWidth = 2;
       ctx.strokeStyle = "black";
       ctx.strokeRect(cardX, cardY, cardWidthScaled, cardHeightScaled);
 
-      // Outer Measurement Borders (blue), drawn with 1px stroke.
       ctx.lineWidth = 1;
       ctx.strokeStyle = "blue";
       ctx.beginPath();
       ctx.moveTo(cardX, cardY + outerTop * scale);
       ctx.lineTo(cardX + cardWidthScaled, cardY + outerTop * scale);
       ctx.stroke();
-
       ctx.beginPath();
       ctx.moveTo(cardX, cardY + outerBottom * scale);
       ctx.lineTo(cardX + cardWidthScaled, cardY + outerBottom * scale);
       ctx.stroke();
-
       ctx.beginPath();
       ctx.moveTo(cardX + outerLeft * scale, cardY);
       ctx.lineTo(cardX + outerLeft * scale, cardY + cardHeightScaled);
       ctx.stroke();
-
       ctx.beginPath();
       ctx.moveTo(cardX + outerRight * scale, cardY);
       ctx.lineTo(cardX + outerRight * scale, cardY + cardHeightScaled);
       ctx.stroke();
 
-      // Inner Measurement Borders (neon yellow).
       ctx.strokeStyle = "#FFFF00";
       ctx.beginPath();
       ctx.moveTo(cardX, cardY + innerTop * scale);
       ctx.lineTo(cardX + cardWidthScaled, cardY + innerTop * scale);
       ctx.stroke();
-
       ctx.beginPath();
       ctx.moveTo(cardX, cardY + innerBottom * scale);
       ctx.lineTo(cardX + cardWidthScaled, cardY + innerBottom * scale);
       ctx.stroke();
-
       ctx.beginPath();
       ctx.moveTo(cardX + innerLeft * scale, cardY);
       ctx.lineTo(cardX + innerLeft * scale, cardY + cardHeightScaled);
       ctx.stroke();
-
       ctx.beginPath();
       ctx.moveTo(cardX + innerRight * scale, cardY);
       ctx.lineTo(cardX + innerRight * scale, cardY + cardHeightScaled);
       ctx.stroke();
 
-      // Draw tab attachments with offsets.
       ctx.fillStyle = "white";
-      // Horizontal tabs.
       ctx.fillRect(cardX + cardWidthScaled/2 - tabSize/2 - 10, cardY + outerTop * scale - tabSize/2, tabSize, tabSize);
       ctx.fillRect(cardX + cardWidthScaled/2 - tabSize/2 - 10, cardY + outerBottom * scale - tabSize/2, tabSize, tabSize);
       ctx.fillRect(cardX + cardWidthScaled/2 - tabSize/2 + 10, cardY + innerTop * scale - tabSize/2, tabSize, tabSize);
       ctx.fillRect(cardX + cardWidthScaled/2 - tabSize/2 + 10, cardY + innerBottom * scale - tabSize/2, tabSize, tabSize);
-      // Vertical tabs.
       ctx.fillRect(cardX + outerLeft * scale - tabSize/2, cardY + cardHeightScaled/2 - tabSize/2 - 10, tabSize, tabSize);
       ctx.fillRect(cardX + outerRight * scale - tabSize/2, cardY + cardHeightScaled/2 - tabSize/2 - 10, tabSize, tabSize);
       ctx.fillRect(cardX + innerLeft * scale - tabSize/2, cardY + cardHeightScaled/2 - tabSize/2 + 10, tabSize, tabSize);
       ctx.fillRect(cardX + innerRight * scale - tabSize/2, cardY + cardHeightScaled/2 - tabSize/2 + 10, tabSize, tabSize);
 
-      // Centering Calculations.
       const verticalTopGap = innerTop - outerTop;
       const verticalBottomGap = outerBottom - innerBottom;
       const verticalTotal = verticalTopGap + verticalBottomGap;
       const verticalPercent = verticalTotal ? (verticalTopGap / verticalTotal) * 100 : 0;
-
       const horizontalLeftGap = innerLeft - outerLeft;
       const horizontalRightGap = outerRight - innerRight;
       const horizontalTotal = horizontalLeftGap + horizontalRightGap;
       const horizontalPercent = horizontalTotal ? (horizontalLeftGap / horizontalTotal) * 100 : 0;
-
       verticalInfo.textContent = "Vertical: " + verticalPercent.toFixed(1) + "% top / " + (100 - verticalPercent).toFixed(1) + "% bottom";
       horizontalInfo.textContent = "Horizontal: " + horizontalPercent.toFixed(1) + "% left / " + (100 - horizontalPercent).toFixed(1) + "% right";
     }
 
-    // Mouse event handlers.
+    function loadFile(file) {
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) { cardImage.src = e.target.result; };
+        reader.readAsDataURL(file);
+      }
+    }
+
     canvas.addEventListener('mousedown', (evt) => {
       if (!cardImage.complete) return;
       const pos = getMousePosInCardCoords(evt);
-      // For each border, check if pointer is near the line OR in its tab rectangle.
       if (Math.abs(pos.y - outerTop) < tolerance || isInRect(pos, getTabRect("outerTop"))) { dragItem = "outerTop"; dragging = true; }
       else if (Math.abs(pos.y - outerBottom) < tolerance || isInRect(pos, getTabRect("outerBottom"))) { dragItem = "outerBottom"; dragging = true; }
       else if (Math.abs(pos.x - outerLeft) < tolerance || isInRect(pos, getTabRect("outerLeft"))) { dragItem = "outerLeft"; dragging = true; }
@@ -315,7 +330,6 @@
     canvas.addEventListener('mouseup', () => { dragging = false; dragItem = null; });
     canvas.addEventListener('mouseleave', () => { dragging = false; dragItem = null; });
 
-    // Touch event handlers.
     canvas.addEventListener('touchstart', (evt) => {
       evt.preventDefault();
       if (!cardImage.complete) return;
@@ -347,18 +361,35 @@
       drawCanvas();
     }, { passive: false });
 
-    canvas.addEventListener('touchend', (evt) => {
-      evt.preventDefault();
-      dragging = false;
-      dragItem = null;
-    }, { passive: false });
-    canvas.addEventListener('touchcancel', (evt) => {
-      evt.preventDefault();
-      dragging = false;
-      dragItem = null;
-    }, { passive: false });
+    canvas.addEventListener('touchend', (evt) => { evt.preventDefault(); dragging = false; dragItem = null; }, { passive: false });
+    canvas.addEventListener('touchcancel', (evt) => { evt.preventDefault(); dragging = false; dragItem = null; }, { passive: false });
 
-    // Rotation slider.
+    canvasWrapper.addEventListener('dragover', (evt) => {
+      evt.preventDefault();
+      canvasWrapper.classList.add('dragover');
+    });
+    canvasWrapper.addEventListener('dragleave', (evt) => {
+      evt.preventDefault();
+      canvasWrapper.classList.remove('dragover');
+    });
+    canvasWrapper.addEventListener('drop', (evt) => {
+      evt.preventDefault();
+      canvasWrapper.classList.remove('dragover');
+      const files = evt.dataTransfer.files;
+      if (files.length > 0) { loadFile(files[0]); }
+    });
+
+    document.addEventListener('paste', (evt) => {
+      const items = evt.clipboardData.items;
+      for (let item of items) {
+        if (item.type.indexOf("image") !== -1) {
+          const file = item.getAsFile();
+          loadFile(file);
+          break;
+        }
+      }
+    });
+
     rotateSlider.addEventListener('input', () => {
       rotationAngle = parseFloat(rotateSlider.value);
       angleValue.textContent = rotationAngle + "°";
@@ -366,16 +397,11 @@
       drawCanvas();
     });
 
-    // Image upload.
-    fileInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (event) => { cardImage.src = event.target.result; };
-      reader.readAsDataURL(file);
+    fileInput.addEventListener('change', (evt) => {
+      const file = evt.target.files[0];
+      loadFile(file);
     });
 
-    // Initialize when image loads.
     cardImage.onload = () => {
       scale = Math.min(canvas.width / cardImage.width, canvas.height / cardImage.height);
       outerTop = cardImage.height * 0.05;
@@ -386,6 +412,7 @@
       innerBottom = cardImage.height * 0.85;
       innerLeft = cardImage.width * 0.15;
       innerRight = cardImage.width * 0.85;
+      instructions.style.display = "none";
       drawCanvas();
     };
 
