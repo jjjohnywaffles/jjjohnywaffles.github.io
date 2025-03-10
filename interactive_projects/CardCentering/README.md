@@ -49,6 +49,10 @@ This project is open-source. Feel free to modify.
 ## Contributing
 Contributions and suggestions are welcome! Please submit issues or pull requests on GitHub.
 
+## Potential Features
+- Machine learning to automatically place the centering lines along with rotating the cards. 
+- Image transposition to allow users to upload slightly off angle images to allow for more accurate centering measurements
+  
 ---
 
 Enjoy using the Card Centering Tool, and I hope it helps you in your card grading adventure!
